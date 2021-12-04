@@ -99,14 +99,14 @@ class Interface_db():
             try:
                 self.connect()
                 self.collection = self.database[rawdataset]        
-                lista = []
-                dados = self.collection.find()
-                for d in dados:
-                    lista.append(d)
+                list = []
+                collection_data = self.collection.find()
+                for d in collection_data:
+                    list.append(d)
             except Exception as e:
                 print("Mongodb get all error: ",str(e)) 
             else:
-                return pd.DataFrame(lista)
+                return pd.DataFrame(list)
 
             
     def to_collection(self, new_dataframe, collection_name):
