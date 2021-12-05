@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from pymongo import MongoClient
 import mysql.connector
 import pandas as pd
@@ -9,7 +10,10 @@ class Interface_db():
     """Class for connection with mysql, postgresql and mongodb
 
     Attributes:
-        host [string]: Connection host
+        scheme [string]: Connection scheme (mysql, postgres or mongodb)
+        hostname [string]: Hostname (url)
+        username [string]: Username
+        password [string]: Username password
         database [string]: Database name
     
     Returns:
@@ -17,45 +21,46 @@ class Interface_db():
         Boolean: Confirmation of data frame conversion to mongodb collection - to_collection() method
     """
 
-    host = ""
+    scheme = ""
+    hostname = ""
+    username = ""
+    password = ""
     database = ""
     
-    def __init__(self, host, database):
-        
-        self.host = host
-        self.database = database
-        
-        # Check host substring to define which data base management system  will be used
-        if(host.find("q") == 3):
-            self.name = "mysql"
-        elif(host.find("g") == 3):
-            self.name = "mongodb"
-        elif(host.find("t") == 3):
-            self.name = "postgres"
     
+    def __init__(self, url):
+                
+        url = urlparse(url)
+        
+        self.scheme = url.scheme
+        self.hostname = url.hostname
+        self.username = url.username
+        self.password = url.password
+        self.database = url.path.lstrip('/')
+
         
     def connect(self):
         """Database connection method
         """
-        if(self.name == "mysql"):
+        if(self.scheme == "mysql"):
             try:
-                con = mysql.connector.connect(user=self.host[self.host.find('?u=')+3:self.host.find('&p=')], password=self.host[self.host.find("&p=")+3:], host=self.host[self.host.find('://')+3:self.host.find('/?u')], database=self.database)
+                con = mysql.connector.connect(user=self.username, password=self.password, host=self.hostname, database=self.database)
                 cursor = con.cursor()
             except Exception as e:
                 print("MySQL connect error: ",str(e))
             else:
                 return con, cursor
-        elif(self.name == "postgres"):
+        elif(self.scheme == "postgres"):
             try:
-                con = psycopg2.connect(f"dbname='{self.database}' user='{self.host[self.host.find('?u=')+3:self.host.find('&p=')]}' host='{self.host[self.host.find('://')+3:self.host.find('/?u')]}' password='{self.host[self.host.find('&p=')+3:]}'")
+                con = psycopg2.connect(f"dbname='{self.database}' user='{self.username}' host='{self.hostname}' password='{self.password}'")
                 cursor = con.cursor()
             except Exception as e:
                 print("Postgres connect error: ",str(e))
             else:
                 return con, cursor
-        elif(self.name == "mongodb"):
+        elif(self.scheme == "mongodb"):
             try:
-                self.client = MongoClient(self.host)
+                self.client = MongoClient(self.hostname)
                 self.database=self.client[self.database]
             except Exception as e:
                 print("Mongodb connect error: ",str(e)) 
@@ -75,7 +80,7 @@ class Interface_db():
     def get_all(self, rawdataset):
         """Method to return a table or collection in pandas dataframe format
         """
-        if(self.name=="mysql"):
+        if(self.scheme == "mysql"):
             try:              
                 con, cursor = self.connect()
                 cursor.execute(f"select * from {rawdataset};")
@@ -85,7 +90,7 @@ class Interface_db():
                 return pd.DataFrame(cursor.fetchall())
             finally:
                 self.disconnect(con, cursor)
-        elif(self.name=="postgres"):
+        elif(self.scheme == "postgres"):
             try:              
                 con, cursor = self.connect()
                 cursor.execute(f"select * from {rawdataset};")
@@ -95,7 +100,7 @@ class Interface_db():
                 return pd.DataFrame(cursor.fetchall())
             finally:
                 self.disconnect(con, cursor)
-        elif(self.name=="mongodb"):
+        elif(self.scheme == "mongodb"):
             try:
                 self.connect()
                 self.collection = self.database[rawdataset]        
@@ -113,7 +118,7 @@ class Interface_db():
         """Method to convert a pandas dataframe to nosql collection
         """
         try:
-            client = MongoClient(self.host)
+            client = MongoClient(self.hostname)
             db = client[self.database]
             collection = db[collection_name]
             data_dict = new_dataframe.to_json(orient="records")
