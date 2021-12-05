@@ -14,7 +14,7 @@ class Interface_db():
         hostname [string]: Hostname (url)
         username [string]: Username
         password [string]: Username password
-        database [string]: Database name
+        database [string]: Database or document name
     
     Returns:
         Dataframe: Data in pandas dataframe - get_all() method
@@ -29,14 +29,17 @@ class Interface_db():
     
     
     def __init__(self, url):
-                
-        url = urlparse(url)
-        
-        self.scheme = url.scheme
-        self.hostname = url.hostname
-        self.username = url.username
-        self.password = url.password
-        self.database = url.path.lstrip('/')
+        """Constructor method parses URL
+        """
+        try:
+            url = urlparse(url)
+            self.scheme = url.scheme
+            self.hostname = url.hostname
+            self.username = url.username
+            self.password = url.password
+            self.database = url.path.lstrip('/')            
+        except Exception as e:
+            print("Error when parsing the url: ",str(e))
 
         
     def connect(self):
@@ -77,13 +80,13 @@ class Interface_db():
             print("Disconnect error: ",str(e)) 
 
 
-    def get_all(self, rawdataset):
+    def get_all(self, target):
         """Method to return a table or collection in pandas dataframe format
         """
         if(self.scheme == "mysql"):
             try:              
                 con, cursor = self.connect()
-                cursor.execute(f"select * from {rawdataset};")
+                cursor.execute(f"select * from {target};")
             except Exception as e:
                 print("Mysql get all error: ",str(e)) 
             else:
@@ -93,7 +96,7 @@ class Interface_db():
         elif(self.scheme == "postgres"):
             try:              
                 con, cursor = self.connect()
-                cursor.execute(f"select * from {rawdataset};")
+                cursor.execute(f"select * from {target};")
             except Exception as e:
                 print("Postgres get all error: ",str(e)) 
             else:
@@ -103,7 +106,7 @@ class Interface_db():
         elif(self.scheme == "mongodb"):
             try:
                 self.connect()
-                self.collection = self.database[rawdataset]        
+                self.collection = self.database[target]        
                 list = []
                 collection_data = self.collection.find()
                 for d in collection_data:
