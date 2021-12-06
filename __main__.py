@@ -1,3 +1,9 @@
+#TODO: Cassandra driver
+
+# _author_ = "Diego Alves"
+# _license_ = "Beerware"
+# _version_ = "0.0.1"
+
 from modules.Connector import Interface_db
 import pandas as pd
 import os
