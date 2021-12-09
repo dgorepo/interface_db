@@ -1,3 +1,5 @@
+# importação de modulos
+from cassandra.cluster import Cluster
 from urllib.parse import urlparse
 from pymongo import MongoClient
 import mysql.connector
@@ -33,7 +35,7 @@ class Interface_db():
         """
         try:
             url = urlparse(url)
-            self.scheme = url.scheme
+            self.scheme = url.scheme # mongodb ou mysql ou postgres
             self.hostname = url.hostname
             self.username = url.username
             self.password = url.password
@@ -61,10 +63,16 @@ class Interface_db():
                 print("Postgres connect error: ",str(e))
             else:
                 return con, cursor
+        elif(self.scheme == "cassandra"):
+            try:
+                self.client = Cluster()
+                self.con = self.client.connect(self.database)
+            except Exception as e:
+                print("Cassandra connect error: ",str(e)) 
         elif(self.scheme == "mongodb"):
             try:
                 self.client = MongoClient(self.hostname)
-                self.database=self.client[self.database]
+                self.database = self.client[self.database]
             except Exception as e:
                 print("Mongodb connect error: ",str(e)) 
         
@@ -83,26 +91,27 @@ class Interface_db():
     def get_all(self, target):
         """Method to return a table or collection in pandas dataframe format
         """
-        if(self.scheme == "mysql"):
+        if(self.scheme == "mysql" or self.scheme == "postgresql"):
             try:              
                 con, cursor = self.connect()
                 cursor.execute(f"select * from {target};")
             except Exception as e:
-                print("Mysql get all error: ",str(e)) 
+                print("Mysql or Postgres get all error: ",str(e)) 
             else:
                 return pd.DataFrame(cursor.fetchall())
             finally:
                 self.disconnect(con, cursor)
-        elif(self.scheme == "postgres"):
-            try:              
-                con, cursor = self.connect()
-                cursor.execute(f"select * from {target};")
+        elif(self.scheme == "cassandra"):
+            try:
+                self.connect()
+                collection_data = self.con.execute(f"select * from {target};")
+                list = []
+                for d in collection_data:
+                    list.append(d)
             except Exception as e:
-                print("Postgres get all error: ",str(e)) 
+                print("Cassandra get all error: ",str(e)) 
             else:
-                return pd.DataFrame(cursor.fetchall())
-            finally:
-                self.disconnect(con, cursor)
+                return pd.DataFrame(list)
         elif(self.scheme == "mongodb"):
             try:
                 self.connect()
