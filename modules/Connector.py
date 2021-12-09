@@ -9,10 +9,10 @@ import ast
 
 
 class Interface_db():
-    """Class for connection with mysql, postgresql and mongodb
+    """Class for connection with mysql, postgresql, cassandra and mongodb
 
     Attributes:
-        scheme [string]: Connection scheme (mysql, postgres or mongodb)
+        scheme [string]: Connection scheme (mysql, postgres, cassandra or mongodb)
         hostname [string]: Hostname (url)
         username [string]: Username
         password [string]: Username password

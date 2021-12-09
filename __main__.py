@@ -1,4 +1,4 @@
-#TODO: Cassandra driver
+#TODO: 
 
 # _author_ = "Diego Alves"
 # _license_ = "Beerware"
@@ -10,7 +10,7 @@ import os
 
 
 if __name__ == "__main__":
-    """ Connection with mysql, postgresql and mongodb & 
+    """ Connection with mysql, postgresql, cassandra and mongodb & 
         return a table or collection in pandas dataframe format &  
         dataframe conversion to mongodb collection
     """
