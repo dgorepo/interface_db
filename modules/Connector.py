@@ -1,4 +1,3 @@
-# importação de modulos
 from cassandra.cluster import Cluster
 from urllib.parse import urlparse
 from pymongo import MongoClient
@@ -35,7 +34,7 @@ class Interface_db():
         """
         try:
             url = urlparse(url)
-            self.scheme = url.scheme # mongodb ou mysql ou postgres
+            self.scheme = url.scheme
             self.hostname = url.hostname
             self.username = url.username
             self.password = url.password
